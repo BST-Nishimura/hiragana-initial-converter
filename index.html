@@ -80,11 +80,11 @@ background: linear-gradient(90deg, #a68a4c 0%, #d1b97c 100%);
    <h1>Hiragana Initial Converter</h1>
    <input type="text" id="nameInput" placeholder="Enter your name in English">
    <br>
-   <button onclick="convertName()">Convert</button>
+   <button id="convertBtn">Convert</button>
    <p id="result"></p>
  </div>
  <script>
-   // ここにnameDictを入れてください
+   // nameDictは削除せずに残す（将来の拡張用）
    const nameDict = {
        "mary": "めありー",
   "chloe": "くろえ",
@@ -1024,21 +1024,51 @@ background: linear-gradient(90deg, #a68a4c 0%, #d1b97c 100%);
 "taylor": "ていらー"
      // ...（他の名前もここに追加）...
    };
-   function convertName() {
-     const input = document.getElementById('nameInput').value.trim().toLowerCase();
+   
+   async function aiConvert() {
+     const input = document.getElementById('nameInput');
+     const btn = document.getElementById('convertBtn');
      const result = document.getElementById('result');
-     if (!input) {
-       result.textContent = "Sorry, this name is not registered yet.";
+     const name = (input?.value || '').trim();
+     
+     result.textContent = '';
+     if (!name) {
+       result.textContent = 'Please enter a name.';
        return;
      }
-     if (Object.prototype.hasOwnProperty.call(nameDict, input)) {
-       const hiragana = nameDict[input];
+     
+     btn.disabled = true;
+     const oldText = btn.textContent;
+     btn.textContent = 'Converting...';
+     
+     try {
+       const res = await fetch('/api/convert', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ name })
+       });
+       
+       const data = await res.json();
+       
+       if (!res.ok) {
+         throw new Error(data.error || 'Conversion failed');
+       }
+       
+       const hiragana = data.hiragana;
        const initial = hiragana.charAt(0);
        result.innerHTML = `The initial is "<span id="initial">${initial}</span>" (${hiragana}).`;
-     } else {
-       result.textContent = "Sorry, this name is not registered yet.But don't worry, our friendly staff will help you!";
+       
+     } catch (e) {
+       result.textContent = 'Error: ' + e.message;
+     } finally {
+       btn.disabled = false;
+       btn.textContent = oldText;
      }
    }
+   
+   document.addEventListener('DOMContentLoaded', function() {
+     document.getElementById('convertBtn').addEventListener('click', aiConvert);
+   });
  </script>
 </body>
 </html>

@@ -1,0 +1,9 @@
+{
+  "name": "hiragana-initial-converter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "openai": "^5.10.0"
+  }
+}
